@@ -1,5 +1,5 @@
 /*import shared library */
-@Library('jenkins-shared-library')_
+@Library('omar-shared-library')_
 pipeline {
      environment {
        ID_DOCKER = "${ID_DOCKER_PARAMS}"
@@ -120,7 +120,7 @@ pipeline {
        always {
       script {
           
-           slackNotifier_dev currentBuild.result
+           slackNotifier currentBuild.result
       }
      }       
     }     
