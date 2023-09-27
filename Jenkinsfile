@@ -5,7 +5,7 @@ pipeline {
        ID_DOCKER = "${ID_DOCKER_PARAMS}"
        IMAGE_NAME = "staticwebsite"
        IMAGE_TAG = "latest"
-       // PORT_EXPOSED = "80" à paraméter dans le job obligatoirement
+       PORT_EXPOSED = "80" à paraméter dans le job obligatoirement
        APP_NAME = "Omar"
        STG_API_ENDPOINT = "http://ip10-0-1-3-cka4l5st654gqaevke10-1993.direct.docker.labs.eazytraining.fr"
        STG_APP_ENDPOINT = "http://ip10-0-1-3-cka4l5st654gqaevke10-80.direct.docker.labs.eazytraining.fr"
