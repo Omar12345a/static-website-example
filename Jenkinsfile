@@ -44,7 +44,7 @@ pipeline {
            steps {
               script {
                 sh '''
-                    curl http://127.0.0.1:${PORT_EXPOSED} | grep -q "Hello world!"
+                    curl http://127.0.0.1:${PORT_EXPOSED} | grep -i "Dimension"
                 '''
               }
            }
