@@ -1,11 +1,12 @@
-/*import shared library */
+/* Import shared library */
 @Library('omar-shared-library')_
+
 pipeline {
      environment {
        ID_DOCKER = "${ID_DOCKER_PARAMS}"
        IMAGE_NAME = "staticwebsite"
        IMAGE_TAG = "latest"
-       // PORT_EXPOSED = "80" à paraméter dans le job obligatoirement
+       PORT_EXPOSED = "80" // Vous devez spécifier le port ici
        APP_NAME = "Omar"
        STG_API_ENDPOINT = "http://ip10-0-1-3-cka4l5st654gqaevke10-1993.direct.docker.labs.eazytraining.fr"
        STG_APP_ENDPOINT = "http://ip10-0-1-3-cka4l5st654gqaevke10-80.direct.docker.labs.eazytraining.fr"
@@ -14,12 +15,10 @@ pipeline {
        INTERNAL_PORT = "5000"
        EXTERNAL_PORT = "${PORT_EXPOSED}"
        CONTAINER_IMAGE = "${ID_DOCKER}/${IMAGE_NAME}:${IMAGE_TAG}"
-
      }
-     agent none
+     agent any
      stages {
          stage('Build image') {
-             agent any
              steps {
                 script {
                   sh 'docker build -t ${ID_DOCKER}/$IMAGE_NAME:$IMAGE_TAG .'
@@ -27,7 +26,6 @@ pipeline {
              }
         }
         stage('Run container based on builded image') {
-            agent any
             steps {
                script {
                  sh '''
@@ -40,17 +38,15 @@ pipeline {
             }
        }
        stage('Test image') {
-           agent any
            steps {
               script {
                 sh '''
-                    curl http://172.17.0.1:${PORT_EXPOSED} | grep -i "Dimension"
+                    curl http://127.0.0.1:${PORT_EXPOSED} | grep -i "Dimension"
                 '''
               }
            }
       }
       stage('Clean Container') {
-          agent any
           steps {
              script {
                sh '''
@@ -62,7 +58,6 @@ pipeline {
      }
 
       stage('Save Artefact') {
-          agent any
           steps {
              script {
                sh '''
@@ -73,7 +68,6 @@ pipeline {
      }          
           
      stage ('Login and Push Image on docker hub') {
-          agent any
         environment {
            DOCKERHUB_PASSWORD  = credentials('dockerhub-credentials')
         }            
@@ -88,29 +82,24 @@ pipeline {
       }    
      
      stage('STAGING - Deploy app') {
-      agent any
       steps {
           script {
             sh """
               echo  {\\"your_name\\":\\"${APP_NAME}\\",\\"container_image\\":\\"${CONTAINER_IMAGE}\\", \\"external_port\\":\\"${EXTERNAL_PORT}\\", \\"internal_port\\":\\"${INTERNAL_PORT}\\"}  > data.json 
-              curl -X POST http://${STG_API_ENDPOINT}/staging -H 'Content-Type: application/json'  --data-binary @data.json 
+              curl -X POST ${STG_API_ENDPOINT}/staging -H 'Content-Type: application/json'  --data-binary @data.json 
             """
           }
         }
      }
 
-
-
      stage('PRODUCTION - Deploy app') {
        when {
-              expression { GIT_BRANCH == 'origin/master' }
-            }
-      agent any
-
-      steps {
+          expression { GIT_BRANCH == 'origin/master' }
+       }
+       steps {
           script {
             sh """
-               curl -X POST http://${PROD_API_ENDPOINT}/prod -H 'Content-Type: application/json' -d '{"your_name":"${APP_NAME}","container_image":"${CONTAINER_IMAGE}", "external_port":"${EXTERNAL_PORT}", "internal_port":"${INTERNAL_PORT}"}'
+               curl -X POST ${PROD_API_ENDPOINT}/prod -H 'Content-Type: application/json' -d '{"your_name":"${APP_NAME}","container_image":"${CONTAINER_IMAGE}", "external_port":"${EXTERNAL_PORT}", "internal_port":"${INTERNAL_PORT}"}'
                """
           }
         }
@@ -119,10 +108,9 @@ pipeline {
   post {
        always {
       script {
-          
            slackNotifier currentBuild.result
       }
      }       
     }     
-    
 }
+
